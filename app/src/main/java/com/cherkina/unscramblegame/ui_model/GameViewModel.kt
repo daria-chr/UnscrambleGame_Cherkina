@@ -5,17 +5,40 @@ import com.cherkina.unscramblegame.data.GameUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import com.cherkina.unscramblegame.data.allWords
+
 
 class GameViewModel: ViewModel() {
-    private val _uiState= MutableStateFlow(GameUiState())
+    private val _uiState = MutableStateFlow(GameUiState())
     val uiState: StateFlow<GameUiState> = _uiState.asStateFlow()
+    private lateinit var currentWord: String
+    private var usedWords: MutableSet<String> = mutableSetOf()
 
-    init {
-        resetGame()
+    private fun shuffleGurrentWord(word: String): String {
+        val tempWord = word.toCharArray()
+        tempWord.shuffle()
+        while (String(tempWord) == word) {
+            tempWord.shuffle()
+        }
+        return String(tempWord)
     }
 
-    fun resetGame(){
+    private fun pickRandomWordAndShuffle(): String {
+        currentWord = allWords.random()
+        while (usedWords.contains(currentWord)) {
+            currentWord = allWords.random()
+        }
+        usedWords.add(currentWord)
+        return shuffleGurrentWord(currentWord)
 
     }
 
+
+    fun resetGame() {
+        usedWords.clear()
+        _uiState.value = GameUiState(
+            currentScrambleWord = pickRandomWordAndShuffle()
+        )
+
+    }
 }
