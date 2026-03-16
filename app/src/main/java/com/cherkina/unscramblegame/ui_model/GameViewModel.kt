@@ -14,6 +14,10 @@ class GameViewModel: ViewModel() {
     private lateinit var currentWord: String
     private var usedWords: MutableSet<String> = mutableSetOf()
 
+    init {
+        resetGame()
+    }
+
     private fun shuffleGurrentWord(word: String): String {
         val tempWord = word.toCharArray()
         tempWord.shuffle()
