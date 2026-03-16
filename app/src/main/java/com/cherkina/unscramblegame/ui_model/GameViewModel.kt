@@ -1,11 +1,18 @@
 package com.cherkina.unscramblegame.ui_model
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.cherkina.unscramblegame.data.GameUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import com.cherkina.unscramblegame.data.allWords
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import com.cherkina.unscramblegame.data.MAX_NO_OF_WORDS
+import com.cherkina.unscramblegame.data.SCORE_INCREASE
+import kotlinx.coroutines.flow.update
 
 
 class GameViewModel: ViewModel() {
@@ -17,6 +24,9 @@ class GameViewModel: ViewModel() {
     init {
         resetGame()
     }
+
+    var userGuess by mutableStateOf("")
+        private set
 
     private fun shuffleGurrentWord(word: String): String {
         val tempWord = word.toCharArray()
@@ -41,8 +51,47 @@ class GameViewModel: ViewModel() {
     fun resetGame() {
         usedWords.clear()
         _uiState.value = GameUiState(
-            currentScrambleWord = pickRandomWordAndShuffle()
+            currentScrambledWord = pickRandomWordAndShuffle()
         )
 
+    }
+    fun updateUserGuess(guessedWord: String){
+        userGuess=guessedWord
+    }
+    private fun updateGameState(updatedScore: Int) {
+        if (usedWords.size == MAX_NO_OF_WORDS) {
+            _uiState.update { currentState ->
+                currentState.copy(
+                    isGuessedWordWrong = false,
+                    score = updatedScore,
+                    isGameOver = true
+                )
+            }
+        } else {
+            _uiState.update { currentState ->
+                currentState.copy(
+                    isGuessedWordWrong = false,
+                    currentScrambledWord = pickRandomWordAndShuffle(),
+                    score = updatedScore,
+                    currentWordCount = currentState.currentWordCount + 1
+                )
+            }
+        }
+    }
+    fun checkUserGuess() {
+        if (userGuess.equals(currentWord, ignoreCase = true)) {
+            val updatedScore = _uiState.value.score + SCORE_INCREASE
+            updateGameState(updatedScore)
+        } else {
+            _uiState.update { currentState ->
+                currentState.copy(isGuessedWordWrong = true)
+            }
+        }
+
+        updateUserGuess("")
+    }
+    fun skipWord(){
+        updateGameState(_uiState.value.score)
+        updateUserGuess("")
     }
 }
